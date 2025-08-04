@@ -1,9 +1,17 @@
 package main
 
-type Reader interface {
-	Read(p []byte) (n int, err error)
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	go printHi()
+	go fmt.Println("Привет из main")
+	go fmt.Println("Привет из main 2")
+	time.Sleep(time.Second)
 }
 
-type Reader2 interface {
-	Read() (p []byte, err error)
+func printHi() {
+	fmt.Println("Привет из gr")
 }
