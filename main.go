@@ -1,35 +1,57 @@
 package main
 
-import (
-	"fmt"
-	"net/http"
-	"sync"
-)
+import "fmt"
+
+func sumPart(arr []int, ch chan int) {
+	sum := 0
+	for _, num := range arr {
+		sum += num
+	}
+	ch <- sum
+}
 
 func main() {
-	code := make(chan int)
-	var wg sync.WaitGroup
-	for i := 0; i < 10; i++ {
-		wg.Add(1)
-		go func() {
-			getHttpCode(code)
-			wg.Done()
-		}()
-	}
-	go func() {
-		wg.Wait()
-		close(code)
-	}()
-	for res := range code {
-		fmt.Printf("Код: %d\n", res)
+	arr := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}
+	numGoroutines := 3
+	ch := make(chan int, numGoroutines)
 
+	partSize := len(arr) / numGoroutines
+
+	for i := 0; i < numGoroutines; i++ {
+		start := i * partSize
+		end := start + partSize
+		go sumPart(arr[start:end], ch)
 	}
+
+	totalSum := 0
+	for i := 0; i < numGoroutines; i++ {
+		totalSum += <-ch
+	}
+	fmt.Println("Total sum: ", totalSum)
 }
 
-func getHttpCode(codeCh chan int) {
-	resp, err := http.Get("https://google.com")
-	if err != nil {
-		fmt.Printf("Ошибка %s", err.Error())
-	}
-	codeCh <- resp.StatusCode
-}
+// code := make(chan int)
+// var wg sync.WaitGroup
+// for i := 0; i < 10; i++ {
+// 	wg.Add(1)
+// 	go func() {
+// 		getHttpCode(code)
+// 		wg.Done()
+// 	}()
+// }
+// go func() {
+// 	wg.Wait()
+// 	close(code)
+// }()
+// for res := range code {
+// 	fmt.Printf("Код: %d\n", res)
+
+// }
+
+// func getHttpCode(codeCh chan int) {
+// 	resp, err := http.Get("https://google.com")
+// 	if err != nil {
+// 		fmt.Printf("Ошибка %s", err.Error())
+// 	}
+// 	codeCh <- resp.StatusCode
+// }
