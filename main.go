@@ -10,7 +10,15 @@ func hello(w http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
+	router := http.NewServeMux()
+	router.HandleFunc("/hello", hello)
+
+	server := http.Server{
+		Addr:    ":8081",
+		Handler: router,
+	}
+
 	http.HandleFunc("/hello", hello)
 	fmt.Println("Server is listening on port 8081")
-	http.ListenAndServe(":8081", nil)
+	server.ListenAndServe()
 }
