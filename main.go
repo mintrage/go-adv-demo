@@ -1,57 +1,41 @@
 package main
 
-import "fmt"
+import (
+	"flag"
+	"fmt"
+	"net/http"
+	"os"
+	"strings"
+)
 
-func sumPart(arr []int, ch chan int) {
-	sum := 0
-	for _, num := range arr {
-		sum += num
+func ping(url string, respCh chan int, errCh chan error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		errCh <- err
+		return
 	}
-	ch <- sum
+	respCh <- resp.StatusCode
 }
 
 func main() {
-	arr := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}
-	numGoroutines := 3
-	ch := make(chan int, numGoroutines)
-
-	partSize := len(arr) / numGoroutines
-
-	for i := 0; i < numGoroutines; i++ {
-		start := i * partSize
-		end := start + partSize
-		go sumPart(arr[start:end], ch)
+	path := flag.String("file", "url.txt", "path to URL file")
+	flag.Parse()
+	file, err := os.ReadFile(*path)
+	if err != nil {
+		panic(err.Error())
 	}
-
-	totalSum := 0
-	for i := 0; i < numGoroutines; i++ {
-		totalSum += <-ch
+	urlSlice := strings.Split(string(file), "\n")
+	respCh := make(chan int)
+	errCh := make(chan error)
+	for _, url := range urlSlice {
+		go ping(url, respCh, errCh)
 	}
-	fmt.Println("Total sum: ", totalSum)
+	for range urlSlice {
+		select {
+		case errRes := <-errCh:
+			fmt.Println(errRes)
+		case res := <-respCh:
+			fmt.Println(res)
+		}
+	}
 }
-
-// code := make(chan int)
-// var wg sync.WaitGroup
-// for i := 0; i < 10; i++ {
-// 	wg.Add(1)
-// 	go func() {
-// 		getHttpCode(code)
-// 		wg.Done()
-// 	}()
-// }
-// go func() {
-// 	wg.Wait()
-// 	close(code)
-// }()
-// for res := range code {
-// 	fmt.Printf("Код: %d\n", res)
-
-// }
-
-// func getHttpCode(codeCh chan int) {
-// 	resp, err := http.Get("https://google.com")
-// 	if err != nil {
-// 		fmt.Printf("Ошибка %s", err.Error())
-// 	}
-// 	codeCh <- resp.StatusCode
-// }
