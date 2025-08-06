@@ -6,6 +6,8 @@ import (
 	"go/adv-demo/configs"
 	"go/adv-demo/pkg/res"
 	"net/http"
+	"net/mail"
+	"regexp"
 )
 
 type AuthHandlerDeps struct {
@@ -36,6 +38,16 @@ func (handler *AuthHandler) Login() http.HandlerFunc {
 		}
 		if payload.Email == "" {
 			res.Json(w, "Email required", 402)
+			return
+		}
+		_, err = mail.ParseAddress(payload.Email)
+		if err != nil {
+			res.Json(w, "ParseAdderss Wrong email", 402)
+			return
+		}
+		reg, _ := regexp.Compile(`[A-Za-z0-9\._%+\-]+@[A-Za-z0-9\.\-]+\.[A-Za-z]{2,}`)
+		if !reg.MatchString(payload.Email) {
+			res.Json(w, "Wrong email", 402)
 			return
 		}
 		if payload.Password == "" {
