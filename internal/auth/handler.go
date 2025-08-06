@@ -6,8 +6,8 @@ import (
 	"go/adv-demo/configs"
 	"go/adv-demo/pkg/res"
 	"net/http"
-	"net/mail"
-	"regexp"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type AuthHandlerDeps struct {
@@ -35,25 +35,15 @@ func (handler *AuthHandler) Login() http.HandlerFunc {
 		err := json.NewDecoder(req.Body).Decode(&payload)
 		if err != nil {
 			res.Json(w, err.Error(), 402)
-		}
-		if payload.Email == "" {
-			res.Json(w, "Email required", 402)
 			return
 		}
-		_, err = mail.ParseAddress(payload.Email)
+		validate := validator.New()
+		err = validate.Struct(payload)
 		if err != nil {
-			res.Json(w, "ParseAdderss Wrong email", 402)
+			res.Json(w, err.Error(), 402)
 			return
 		}
-		reg, _ := regexp.Compile(`[A-Za-z0-9\._%+\-]+@[A-Za-z0-9\.\-]+\.[A-Za-z]{2,}`)
-		if !reg.MatchString(payload.Email) {
-			res.Json(w, "Wrong email", 402)
-			return
-		}
-		if payload.Password == "" {
-			res.Json(w, "Password required", 402)
-			return
-		}
+
 		fmt.Println(payload)
 		data := LoginResponse{
 			Token: "123",
