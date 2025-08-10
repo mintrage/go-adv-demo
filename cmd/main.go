@@ -9,9 +9,32 @@ import (
 	"go/adv-demo/pkg/db"
 	"go/adv-demo/pkg/middleware"
 	"net/http"
+	"time"
+
+	"golang.org/x/net/context"
 )
 
 func main() {
+	ctx := context.Background()
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, 4*time.Second)
+	defer cancel()
+
+	done := make(chan struct{})
+
+	go func() {
+		time.Sleep(3 * time.Second)
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		fmt.Println("Done task")
+	case <-ctxWithTimeout.Done():
+		fmt.Println("Timeout")
+	}
+}
+
+func main2() {
 	conf := configs.LoadConfig()
 	db := db.NewDb(conf)
 	router := http.NewServeMux()
