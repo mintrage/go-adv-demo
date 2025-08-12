@@ -3,8 +3,8 @@ package auth
 import (
 	"go/adv-demo/configs"
 	"go/adv-demo/pkg/jwt"
+	"go/adv-demo/pkg/req"
 	"go/adv-demo/pkg/res"
-	"go/adv-demo/pkg/res/req"
 	"net/http"
 )
 

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"go/adv-demo/configs"
 	"go/adv-demo/pkg/middleware"
+	"go/adv-demo/pkg/req"
 	"go/adv-demo/pkg/res"
-	"go/adv-demo/pkg/res/req"
 	"net/http"
 	"strconv"
 
@@ -128,5 +128,16 @@ func (handler *LinkHandler) GetAll() http.HandlerFunc {
 			http.Error(w, "Invalid limit", http.StatusBadRequest)
 			return
 		}
+		offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
+		if err != nil {
+			http.Error(w, "Invalid offset", http.StatusBadRequest)
+			return
+		}
+		links := handler.LinkRepository.GetAll(limit, offset)
+		count := handler.LinkRepository.Count()
+		res.Json(w, GetAllLinksResponse{
+			Links: links,
+			Count: count,
+		}, 200)
 	}
 }
