@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"go/adv-demo/internal/auth"
+	"go/adv-demo/internal/user"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -16,7 +17,7 @@ import (
 )
 
 func initDb() *gorm.DB {
-	err := godotenv.Load("cmd/.env")
+	err := godotenv.Load(".env")
 	if err != nil {
 		panic(err)
 	}
@@ -27,9 +28,18 @@ func initDb() *gorm.DB {
 	return db
 }
 
+func initData(db *gorm.DB) {
+	db.Create(&user.User{
+		Email:    "a2@a.ru",
+		Password: "$2a$10$XtwigTQme/7Yw10joPGqjuRjK6umcyTekC3.f6uWhLemAJrqqvHEe",
+		Name:     "Вася",
+	})
+}
+
 func TestLoginSuccess(t *testing.T) {
 	//Prepare
 	db := initDb()
+	initData(db)
 
 	ts := httptest.NewServer(App())
 	defer ts.Close()
